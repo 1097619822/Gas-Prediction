@@ -1,12 +1,32 @@
+import os
 import matplotlib.pyplot as plt
+from matplotlib import font_manager
 import seaborn as sns
 import pandas as pd
 import numpy as np
 
 # 学术风格配置
-plt.rcParams['font.sans-serif'] = ['SimHei'] 
-plt.rcParams['axes.unicode_minus'] = False
+def setup_chinese_font():
+    font_candidates = [
+        r'C:\Windows\Fonts\msyh.ttc',
+        r'C:\Windows\Fonts\simhei.ttf',
+        r'C:\Windows\Fonts\NotoSansSC-VF.ttf',
+        r'C:\Windows\Fonts\simsun.ttc',
+    ]
+    for font_path in font_candidates:
+        if os.path.exists(font_path):
+            font_manager.fontManager.addfont(font_path)
+            font_name = font_manager.FontProperties(fname=font_path).get_name()
+            plt.rcParams['font.family'] = 'sans-serif'
+            plt.rcParams['font.sans-serif'] = [font_name, 'Microsoft YaHei', 'SimHei', 'Noto Sans CJK SC']
+            return font_name
+    plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Noto Sans CJK SC', 'Arial Unicode MS']
+    return None
+
+
 sns.set_theme(style="whitegrid")
+CHINESE_FONT = setup_chinese_font()
+plt.rcParams['axes.unicode_minus'] = False
 
 class Visualizer:
     """

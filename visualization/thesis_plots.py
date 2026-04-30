@@ -6,24 +6,43 @@ import os
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib import font_manager
 import seaborn as sns
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 from matplotlib.patches import Circle, Rectangle
 import matplotlib.patches as mpatches
 
 # 设置中文字体
-plt.rcParams['font.sans-serif'] = ['SimHei', 'Microsoft YaHei', 'Arial Unicode MS']
+def setup_chinese_font():
+    font_candidates = [
+        r'C:\Windows\Fonts\msyh.ttc',
+        r'C:\Windows\Fonts\simhei.ttf',
+        r'C:\Windows\Fonts\NotoSansSC-VF.ttf',
+        r'C:\Windows\Fonts\simsun.ttc',
+    ]
+    for font_path in font_candidates:
+        if os.path.exists(font_path):
+            font_manager.fontManager.addfont(font_path)
+            font_name = font_manager.FontProperties(fname=font_path).get_name()
+            plt.rcParams['font.family'] = 'sans-serif'
+            plt.rcParams['font.sans-serif'] = [font_name, 'Microsoft YaHei', 'SimHei', 'Noto Sans CJK SC']
+            return font_name
+    plt.rcParams['font.sans-serif'] = ['Microsoft YaHei', 'SimHei', 'Noto Sans CJK SC', 'Arial Unicode MS']
+    return None
+
+
+CHINESE_FONT = setup_chinese_font()
 plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['figure.dpi'] = 300
 
 # 创建输出目录
-OUTPUT_DIR = os.path.join(os.path.dirname(__file__), '..', '..', '论文图表')
+OUTPUT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '\u8bba\u6587\u56fe\u8868'))
 os.makedirs(OUTPUT_DIR, exist_ok=True)
 
 
 def save_fig(fig, name):
     """保存图片到论文图表目录"""
-    path = os.path.join(OUTPUT_DIR, f"{name}.png")
+    path = os.path.abspath(os.path.join(OUTPUT_DIR, f"{name}.png"))
     fig.savefig(path, dpi=300, bbox_inches='tight', facecolor='white')
     print(f"[Saved] {path}")
     return path
@@ -501,7 +520,7 @@ def create_evaluation_dashboard(y_true, y_pred, model_name='LSTM',
         """
         ax3.text(0.1, 0.5, metrics_text, transform=ax3.transAxes,
                 fontsize=12, verticalalignment='center',
-                fontfamily='monospace',
+                fontfamily=CHINESE_FONT or 'sans-serif',
                 bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
     # 4. 时间序列预测曲线（取前200个点展示）
@@ -556,7 +575,7 @@ def create_evaluation_dashboard(y_true, y_pred, model_name='LSTM',
     """
     ax6.text(0.98, 0.5, stats_text, transform=ax6.transAxes,
             fontsize=10, verticalalignment='center', horizontalalignment='right',
-            fontfamily='monospace',
+            fontfamily=CHINESE_FONT or 'sans-serif',
             bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.5))
 
     ax6.set_xlabel('绝对误差值', fontsize=11)

@@ -4,6 +4,7 @@ import sys
 if hasattr(sys.stdout, 'reconfigure'):
     sys.stdout.reconfigure(encoding='utf-8', errors='replace')
 
+import joblib
 import matplotlib
 matplotlib.use('Agg')
 import numpy as np
@@ -64,13 +65,40 @@ def main():
     trainer.train(train_loader, epochs=50)
 
     model_path = os.path.join(config.OUTPUT_DIR, 'ultra_lstm_v2.pth')
+    checkpoint_path = os.path.join(config.OUTPUT_DIR, 'ultra_lstm_v2_checkpoint.pth')
+    scaler_x_path = os.path.join(config.OUTPUT_DIR, 'ultra_lstm_v2_scaler_x.pkl')
+    scaler_y_path = os.path.join(config.OUTPUT_DIR, 'ultra_lstm_v2_scaler_y.pkl')
     trainer.save_model(model_path)
+    joblib.dump(scaler_x, scaler_x_path)
+    joblib.dump(scaler_y, scaler_y_path)
 
     y_pred_scaled = trainer.predict(X_test)
     y_pred = scaler_y.inverse_transform(y_pred_scaled)
     y_true = scaler_y.inverse_transform(y_test.numpy())
 
     metrics = Evaluator.calculate_all_metrics(y_true, y_pred)
+    checkpoint = {
+        'model_state_dict': model.state_dict(),
+        'features': features,
+        'target': target,
+        'seq_len': seq_len,
+        'model_config': {
+            'input_size': len(features),
+            'hidden_size': 128,
+            'num_layers': 2,
+            'bidirectional': True,
+            'dropout': 0.2,
+        },
+        'scaler_x_path': scaler_x_path,
+        'scaler_y_path': scaler_y_path,
+        'metrics': metrics,
+        'target_well': target_well,
+        'train_samples': len(X_train),
+        'test_samples': len(X_test),
+    }
+    torch.save(checkpoint, checkpoint_path)
+    print(f'[LSTM] Checkpoint saved to: {checkpoint_path}')
+    print(f'[LSTM] Scalers saved to: {scaler_x_path}, {scaler_y_path}')
     Evaluator.print_results(metrics, model_name='Optimized Bi-LSTM (Ultra)')
 
     print('\n[Visualization] Exporting final comparison curve...')
@@ -94,3 +122,4 @@ def main():
 
 if __name__ == '__main__':
     main()
+
